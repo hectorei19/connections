@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=202610192100">
+<link rel="stylesheet" href="style.css?v=202610192300">
 <style>
 /* Connections: 16 tiles in a 4 × 4 grid; found groups become coloured bars on top */
 .cx-board{display:flex;flex-direction:column;gap:8px}
@@ -45,9 +45,9 @@
 <footer class="foot"><a class="linkbtn" href="../borderline/">Data and sources: Credits in Borderline</a></footer>
 <div id="layer"></div>
 
-<script src="data.js?v=202610192100"></script>
-<script src="games.js?v=202610192200"></script>
-<script src="minigames.js?v=202610192100"></script>
+<script src="data.js?v=202610192300"></script>
+<script src="games.js?v=202610192300"></script>
+<script src="minigames.js?v=202610192300"></script>
 <script>
 /* ---- the puzzle ----
    Four hidden categories from Borderline's CATS, four countries each. Every country fits its own category and
@@ -128,7 +128,7 @@ function homeHTML(){const key=todayKey(),num=dayNum(key,CX_FIRST),d=dailySaved()
     // played: one row per guess in the colours of its groups, like the shared result; tap to see the groups
     ?`<button class="hcard" id="daily"><span class="hm">Today's puzzle #${num} · done</span><span class="dsum"><span class="dsq" style="grid-template-columns:repeat(4,1fr)" aria-hidden="true">${d.guesses.flat().map(c=>`<i class="g${d.groups[groupOf(d,c)].t}"></i>`).join('')}</span><span class="dtxt"><span class="ht">${d.won?'Solved':d.found.length+' of 4'}</span><span class="hs">${d.won?`${d.mistakes} mistake${d.mistakes===1?'':'s'}`:'groups found'}</span></span><span class="dstats"><span><b>${streakOf(h)}</b>streak</span><span><b>${days.length}</b>played</span><span><b>${days.length?Math.round(days.filter(k=>h[k].w).length/days.length*100):0}%</b>solved</span></span></span><span class="hs">Tap to see the groups and share your result.</span><span class="hm">Next puzzle in ${nextIn()}</span></button>`
     :`<button class="hcard ac" id="daily"><span class="hm">#${num} · ${dateLabel(key)}</span><span class="ht">Today's puzzle</span><span class="hs">${d?'You started it: tap to continue.':'The same 16 countries for everyone, one try. Tap to start.'}</span></button>`;
-  return header('Connec<span>tions</span>','')+`<section class="home">${daily}
+  return header('Connec<span>tions</span>','',true)+`<section class="home">${daily}
     <div class="hrow one"><button class="hcard" data-go="free"><span class="ht">Solo</span><span class="hs">Practice on unlimited puzzles, at your pace.</span></button></div></section>
     <section class="panel qrules"><span class="label">Quick rules</span><p class="hint">Find four groups of four countries that share something: a region, a flag, a language, a name… Pick four and tap <b>Submit</b>. Four mistakes and the game ends. Full rules in <b>How to play</b>.</p></section>`}
 function goHome(){view='home';toastMsg=null;drawToast();sel=[];render()}
