@@ -16,7 +16,15 @@
 .tile{aspect-ratio:1.25;min-width:0;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;box-shadow:var(--shadow);padding:4px;
   font-weight:700;font-size:.92rem;line-height:1.1;text-align:center;display:flex;align-items:center;justify-content:center;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
 .tile:hover{border-color:var(--sea)}
-.tile.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.tile{transition:transform .12s,background-color .12s}
+/* a soft checkerboard by position only (it moves with Shuffle), so the colour is never a clue */
+.cx-grid .tile:nth-child(8n+1),.cx-grid .tile:nth-child(8n+3),.cx-grid .tile:nth-child(8n+6),.cx-grid .tile:nth-child(8n+8){background:color-mix(in srgb,var(--sea) 13%,var(--sheet))}
+.tile:active{transform:scale(.96)}
+.cx-grid .tile.on{background:var(--sea);color:var(--sheet);border-color:var(--sea);transform:translateY(-2px);box-shadow:0 4px 10px color-mix(in srgb,var(--sea) 35%,transparent)}
+/* a group found: its four tiles turn over and show their flags, then join the group's bar */
+.tile.turn{transform:rotateY(90deg);transition:transform .22s ease-in}
+.tile.flipped{flex-direction:column;gap:4px;background:var(--gc-soft)!important;border:1.5px solid var(--gc)!important;color:var(--ink)!important;transform:none;transition:transform .22s ease-out}
+.tile .tflag{width:58%;max-width:56px;aspect-ratio:4/3;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px var(--rule)}
 .tile.long{font-size:.78rem}
 @media (max-width:420px){.tile{font-size:.8rem}.tile.long{font-size:.68rem}.cx-grid,.cx-board{gap:6px}}
 .grp{border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;background:var(--gc-soft);border:1.5px solid var(--gc);text-align:center;animation:pop .35s cubic-bezier(.3,1.6,.6,1)}
@@ -192,7 +200,7 @@ function syncRoom(){const r=room;mode='online';
       S=k&&k.code===roomCode&&k.round===r.round?k.S:newGame('online',r.seed);
       if(S){S.code=roomCode;S.round=r.round;sel=[];leaveArmed=false;save()}}}
   else if(S&&S.mode==='online')S=null;
-  if(view==='room')render()}
+  if(view==='room'&&!turning)render()}
 // my progress, for the others' screens: groups found, mistakes, finished, and the colour rows of my guesses
 function pushProgress(){if(!roomRef||!S||S.mode!=='online'||S.code!==roomCode)return;
   const p={r:S.round,f:S.found.length,m:S.mistakes,done:S.over,won:S.won,on:true};if(S.over)p.ms=S.ms||0;
@@ -231,20 +239,29 @@ function friendsHTML(){return header('Connec<span>tions</span>','')+`<section cl
   </section>`}
 
 /* ---- moves ---- */
-function tap(c){if(!S||S.over)return;const i=sel.indexOf(c);
+function tap(c){if(!S||S.over||turning)return;const i=sel.indexOf(c);
   if(i>=0)sel.splice(i,1);else if(sel.length<4)sel.push(c);render()}
-function submit(){if(!S||S.over||sel.length!==4)return;
+function submit(){if(!S||S.over||turning||sel.length!==4)return;
   const key=sel.slice().sort().join();
   if(S.guesses.some(g=>g.slice().sort().join()===key)){toast('You already tried these four.');return}
   S.guesses.push(sel.slice());
   const gs=sel.map(c=>groupOf(S,c)),counts={};gs.forEach(g=>counts[g]=(counts[g]||0)+1);
   const best=Math.max(...Object.values(counts));
-  if(best===4){const g=gs[0];S.found.push(g);S.left=S.left.filter(c=>!sel.includes(c));sel=[];
+  if(best===4){const g=gs[0],picked=sel.slice();S.found.push(g);S.left=S.left.filter(c=>!picked.includes(c));sel=[];
     if(S.found.length===4){S.over=true;S.won=true}
-    save();render();if(S.won)toast('Solved!','good');return}
+    save();turnOver(picked,S.groups[g].t,()=>{render();if(S.won)toast('Solved!','good')});return}
   S.mistakes++;
   if(S.mistakes>=MAX_MISTAKES){S.over=true;S.won=false;sel=[];save();render();toast('No mistakes left. Here are the groups.','bad');return}
   save();render(true);toast(best===3?'One away…':'Not a group.','bad')}
+
+// the four tiles of a group just found turn over to show their flags in the group's colour, then the bar replaces them
+let turning=false;
+function turnOver(cs,t,done){const els=cs.map(c=>app.querySelector(`.cx-grid [data-c="${c}"]`)).filter(Boolean);
+  if(els.length!==4||matchMedia('(prefers-reduced-motion:reduce)').matches){done();return}
+  turning=true;els.forEach(e=>{e.classList.remove('on');e.classList.add('turn')});
+  setTimeout(()=>{els.forEach(e=>{const c=e.dataset.c;e.innerHTML=`<img class="tflag" src="${FLAGS[c]}" alt=""><span>${esc(byCode[c].n)}</span>`;
+    e.classList.remove('turn');e.classList.add('flipped','g'+t)})},230);
+  setTimeout(()=>{turning=false;done()},1100)}
 
 /* ---- share ---- */
 function shareText(){const rows=S.guesses.map(g=>g.map(c=>TEMOJI[S.groups[groupOf(S,c)].t]).join(''));
