@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-game="connections">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Connections · Borderline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css?v=202610192100">
+<style>
+/* Connections: 16 tiles in a 4 × 4 grid; found groups become coloured bars on top */
+.cx-board{display:flex;flex-direction:column;gap:8px}
+.cx-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{aspect-ratio:1.25;min-width:0;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;box-shadow:var(--shadow);padding:4px;
+  font-weight:700;font-size:.92rem;line-height:1.1;text-align:center;display:flex;align-items:center;justify-content:center;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
+.tile:hover{border-color:var(--sea)}
+.tile.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.tile.long{font-size:.78rem}
+@media (max-width:420px){.tile{font-size:.8rem}.tile.long{font-size:.68rem}.cx-grid,.cx-board{gap:6px}}
+.grp{border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;background:var(--gc-soft);border:1.5px solid var(--gc);text-align:center;animation:pop .35s cubic-bezier(.3,1.6,.6,1)}
+.grp .gl{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:1.25rem;line-height:1.05;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:2px}
+.grp .gl .ib{font-family:var(--ui);font-size:.75rem}
+.grp .gm{font-size:.92rem;font-weight:600}
+.grp .gm img{margin-right:3px}
+.grp.miss{opacity:.8;border-style:dashed}
+.g0{--gc:var(--p2);--gc-soft:var(--p2-soft)}.g1{--gc:var(--p4);--gc-soft:var(--p4-soft)}.g2{--gc:var(--p1);--gc-soft:var(--p1-soft)}.g3{--gc:var(--p3);--gc-soft:var(--p3-soft)}
+.lives{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.95rem;color:var(--ink-2)}
+.lives i{width:12px;height:12px;border-radius:50%;background:var(--ink)}
+.lives i.off{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule)}
+.cx-actions{display:flex;gap:8px}.cx-actions button{flex:1}
+.cx-actions .primary{padding:10px}
+.primary:disabled{opacity:.4;cursor:default}
+.modes{max-width:320px;width:100%;align-self:center}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.cx-grid.shake .tile.on{animation:shake .3s}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<footer class="foot"><a class="linkbtn" href="../borderline/">Data and sources: Credits in Borderline</a></footer>
+<div id="layer"></div>
+
+<script src="data.js?v=202610192100"></script>
+<script src="games.js?v=202610192100"></script>
+<script src="minigames.js?v=202610192100"></script>
+<script>
+/* ---- the puzzle ----
+   Four hidden categories from Borderline's CATS, four countries each. Every country fits its own category and
+   none of the other three, so there is only one way to split the 16 into groups.
+   Colour = difficulty: yellow (well-known themes), green, blue, purple (the trickiest: names and capitals). */
+const CX_FIRST='2026-10-19',MAX_MISTAKES=4;
+const TEMOJI=['🟨','🟩','🟦','🟪'];
+const TIER_OF={region:0,lang:0,money:0,pol:0,flagc:1,flags:1,sea:1,border:1,sport:1,hist:1,geo2:1,geo:2,people:2,dev:2,geo3:2,sport2:2,pol2:2,misc:2,name:3,cap:3};
+const TIER0=new Set(['Landlocked','Island nation (no land borders)']);
+const SKIP=new Set(['Is a territory (not independent)']);
+// independent countries only: territories never appear
+const SOV=C.filter(c=>!c.t).map(c=>c.i);
+const POOLS=[[],[],[],[]];
+CATS.forEach(k=>{if(SKIP.has(k.label))return;const t=TIER0.has(k.label)?0:TIER_OF[k.fam];if(t==null)return;
+  if(SOV.filter(i=>k.set[i]).length>=4)POOLS[t].push(k)});
+function buildPuzzle(seed){const r=rngFrom(seed);
+  for(let a=0;a<3000;a++){
+    const ks=POOLS.map(p=>p[Math.floor(r()*p.length)]);
+    if(new Set(ks.map(k=>k.fam)).size<4)continue;
+    const groups=[];
+    for(let g=0;g<4;g++){const ex=SOV.filter(i=>ks[g].set[i]&&ks.every((k,h)=>h===g||!k.set[i]));
+      if(ex.length<4)break;
+      // better-known countries (1 million people or more) when the category has enough of them
+      const big=ex.filter(i=>(DATA.pop[C[i].c]||0)>=1e6);
+      groups.push({k:ks[g].id,t:g,m:shuffle(big.length>=4?big:ex,r).slice(0,4).map(i=>C[i].c)})}
+    if(groups.length===4)return {seed,groups,order:shuffle(groups.flatMap(g=>g.m),r)}}
+  return null}
+// a game: the puzzle plus what happened (groups found in order, every guess, mistakes)
+function newGame(mode,seed){const p=buildPuzzle(seed);if(!p)return null;
+  const S={mode,seed,groups:p.groups,left:p.order,found:[],guesses:[],mistakes:0,over:false,won:false};
+  if(mode==='daily'){S.date=todayKey();S.num=dayNum(S.date,CX_FIRST)}
+  return S}
+const groupOf=(S,c)=>S.groups.findIndex(g=>g.m.includes(c));
+
+/* ---- state ---- */
+let S=null,sel=[],mode='daily';
+const dailySaved=()=>{const d=load('cx-daily',null);return d&&d.date===todayKey()?d.S:null};
+function save(){if(!S)return;
+  if(S.mode==='daily'){store('cx-daily',{date:S.date,over:S.over,S});
+    if(S.over){const h=load('cx-hist',{});if(!h[S.date]){h[S.date]={w:S.won?1:0,m:S.mistakes};store('cx-hist',h)}}}
+  else store('cx-free',S)}
+function openDaily(){mode='daily';S=dailySaved()||newGame('daily',seedOf('connections-daily-'+todayKey()));sel=[];render()}
+function openFree(seed){mode='free';const f=load('cx-free',null);
+  S=seed==null&&f&&!f.over?f:newGame('free',seed==null?Math.floor(Math.random()*1e9):seed);sel=[];save();render()}
+
+/* ---- moves ---- */
+function tap(c){if(!S||S.over)return;const i=sel.indexOf(c);
+  if(i>=0)sel.splice(i,1);else if(sel.length<4)sel.push(c);render()}
+function submit(){if(!S||S.over||sel.length!==4)return;
+  const key=sel.slice().sort().join();
+  if(S.guesses.some(g=>g.slice().sort().join()===key)){toast('You already tried these four.');return}
+  S.guesses.push(sel.slice());
+  const gs=sel.map(c=>groupOf(S,c)),counts={};gs.forEach(g=>counts[g]=(counts[g]||0)+1);
+  const best=Math.max(...Object.values(counts));
+  if(best===4){const g=gs[0];S.found.push(g);S.left=S.left.filter(c=>!sel.includes(c));sel=[];
+    if(S.found.length===4){S.over=true;S.won=true}
+    save();render();if(S.won)toast('Solved!','good');return}
+  S.mistakes++;
+  if(S.mistakes>=MAX_MISTAKES){S.over=true;S.won=false;sel=[];save();render();toast('No mistakes left. Here are the groups.','bad');return}
+  save();render(true);toast(best===3?'One away…':'Not a group.','bad')}
+
+/* ---- share ---- */
+function shareText(){const rows=S.guesses.map(g=>g.map(c=>TEMOJI[S.groups[groupOf(S,c)].t]).join(''));
+  const head=S.mode==='daily'?`Borderline Connections #${S.num}`:'Borderline Connections (practice)';
+  return head+' — '+(S.won?`solved with ${S.mistakes} mistake${S.mistakes===1?'':'s'}`:`${S.found.length}/4 groups`)+'\n'+rows.join('\n')}
+const shareLink=()=>S.mode==='daily'?pageLink():pageLink('?p='+S.seed);
+const shareMessage=()=>shareText()+'\n\n'+(S.mode==='daily'?"Play today's puzzle: ":'Play this puzzle: ')+shareLink();
+
+/* ---- render ---- */
+const groupHTML=(g,miss)=>{const k=CATS[g.k];
+  return `<div class="grp g${g.t}${miss?' miss':''}"><span class="gl">${esc(k.label)}<button class="ib" data-info="${k.id}" aria-label="What this category means">i</button></span>
+    <span class="gm">${g.m.map(c=>`<span style="white-space:nowrap"><img class="mini" src="${FLAGS[c]}" alt="">${esc(byCode[c].n)}</span>`).join(' · ')}</span></div>`};
+function statsHTML(){const h=load('cx-hist',{}),days=Object.keys(h),won=days.filter(k=>h[k].w).length;
+  return `<div class="stgrid"><div class="st"><b>${days.length}</b><span>played</span></div><div class="st"><b>${days.length?Math.round(won/days.length*100):0}%</b><span>solved</span></div><div class="st"><b>${streakOf(h)}</b><span>streak</span></div></div>`}
+function render(keepShake){
+  if(!S){app.innerHTML=header('Connections','')+`<section class="panel"><p class="hint">Could not build a puzzle. Try again later.</p></section>`;bind();return}
+  const coord=S.mode==='daily'?'Daily #'+S.num:'Practice';
+  let h=header('Connec<span>tions</span>',coord);
+  h+=`<div class="seg modes" role="group" aria-label="Mode"><button data-mode="daily" aria-pressed="${mode==='daily'}">Today's puzzle</button><button data-mode="free" aria-pressed="${mode==='free'}">Practice</button></div>`;
+  if(S.over)h+=resultHTML();
+  h+=`<div class="cx-board">`;
+  S.found.forEach(g=>h+=groupHTML(S.groups[g]));
+  if(S.over)S.groups.forEach((g,i)=>{if(!S.found.includes(i))h+=groupHTML(g,true)});
+  else h+=`<div class="cx-grid${keepShake?' shake':''}">${S.left.map(c=>{const n=byCode[c].n;return `<button class="tile${sel.includes(c)?' on':''}${n.length>12||n.split(' ').some(w=>w.length>10)?' long':''}" data-c="${c}" aria-pressed="${sel.includes(c)}" lang="en">${esc(n)}</button>`}).join('')}</div>`;
+  h+=`</div>`;
+  if(!S.over){
+    h+=`<div class="lives" aria-label="${MAX_MISTAKES-S.mistakes} mistakes left">Mistakes left ${Array.from({length:MAX_MISTAKES},(_,i)=>`<i class="${i<MAX_MISTAKES-S.mistakes?'':'off'}"></i>`).join('')}</div>
+    <div class="cx-actions"><button class="ghost" id="shuf">Shuffle</button><button class="ghost" id="desel" ${sel.length?'':'disabled'}>Deselect all</button><button class="primary" id="submit" ${sel.length===4?'':'disabled'}>Submit</button></div>
+    <section class="panel qrules"><span class="label">Quick rules</span><p class="hint">Find four groups of four countries that share something: a region, a flag, a language, a name… Pick four and tap <b>Submit</b>. Four mistakes and the game ends.</p></section>`}
+  app.innerHTML=h;bind();
+}
+function resultHTML(){
+  const head=S.won?(S.mistakes?`Solved with ${S.mistakes} mistake${S.mistakes===1?'':'s'}`:'Perfect!'):'Better luck next time';
+  return `<section class="panel"><span class="label">${S.mode==='daily'?'Connections #'+S.num:'Practice puzzle'}</span><p class="big">${head}</p>
+    <p class="hint">${S.won?'You found all four groups.':`You found ${S.found.length} of 4 groups.`} ${S.mode==='daily'?`Next puzzle in ${nextIn()}.`:''}</p>
+    <pre class="sharebox" id="share">${esc(shareText())}</pre>
+    <div class="row-btns"><button class="ghost" id="copy" style="flex:1">Share</button><button class="ghost" id="again" style="flex:1">${S.mode==='daily'?'Practice puzzle':'New puzzle'}</button></div>
+    ${nextGameHTML('connections')}
+    ${S.mode==='daily'?`<span class="label">Your daily puzzles</span>${statsHTML()}`:''}</section>`}
+function rulesHTML(){return `<h3>The idea</h3><ul>
+  <li>There are 16 countries. They form <b>four groups of four</b>, and each group shares a hidden category, for example "Uses the euro" or "Flag has a crescent moon".</li>
+  <li>Every country belongs to exactly one group: it fits its own category and none of the other three.</li>
+  <li>Only independent countries appear, never territories.</li></ul>
+  <h3>Playing</h3><ul>
+  <li>Tap four countries and then <b>Submit</b>. If they share a category, the group is revealed with its name and colour.</li>
+  <li>If not, it costs one of your <b>${MAX_MISTAKES} mistakes</b>. "One away…" means three of the four belong together.</li>
+  <li><b>Shuffle</b> moves the tiles around; <b>Deselect all</b> clears your choice.</li>
+  <li>Colours go from easiest to trickiest: ${TEMOJI.join(' ')} (yellow, green, blue, purple).</li>
+  <li>Tap <span class="ib">i</span> on a group to read exactly what its category means. The categories and data are the same as in Borderline.</li></ul>
+  <h3>Modes</h3><ul>
+  <li><b>Today's puzzle</b>: the same for everyone, new every day at midnight CET. One try, saved on this device.</li>
+  <li><b>Practice</b>: unlimited puzzles. Share sends a link to the same puzzle.</li></ul>`}
+function bind(){
+  app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>tap(b.dataset.c));
+  app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(b.dataset.mode===mode)return;b.dataset.mode==='daily'?openDaily():openFree()});
+  app.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{const k=CATS[+b.dataset.info];dialog(esc(k.label),`<p>${esc(k.desc)}</p>`)});
+  if($('rules'))$('rules').onclick=()=>dialog('How to play',rulesHTML());
+  if($('shuf'))$('shuf').onclick=()=>{S.left=shuffle(S.left,Math.random);save();render()};
+  if($('desel'))$('desel').onclick=()=>{sel=[];render()};
+  if($('submit'))$('submit').onclick=submit;
+  if($('copy'))$('copy').onclick=()=>share(shareMessage());
+  if($('again'))$('again').onclick=()=>openFree(Math.floor(Math.random()*1e9));
+}
+
+/* ---- start: ?p=123 opens that practice puzzle (from a shared link) ---- */
+(()=>{const p=TESTQ.get('p');
+  if(p&&/^\d{1,10}$/.test(p)){openFree(+p);try{history.replaceState(null,'',location.pathname)}catch(e){}return}
+  openDaily()})();
+// a new day while the page is open: show the new puzzle when you come back
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mode==='daily'&&S&&S.date!==todayKey())openDaily()});
+</script>
+</body>
+</html>
