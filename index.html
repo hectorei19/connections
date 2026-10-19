@@ -35,6 +35,9 @@
 .modes{max-width:320px;width:100%;align-self:center}
 @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .cx-grid.shake .tile.on{animation:shake .3s}
+/* home screen, as in Borderline: today's puzzle, then Solo, then quick rules */
+.hrow.one{grid-template-columns:1fr}
+.dsq i.g0,.dsq i.g1,.dsq i.g2,.dsq i.g3{background:var(--gc)}
 </style>
 </head>
 <body>
@@ -80,14 +83,14 @@ function newGame(mode,seed){const p=buildPuzzle(seed);if(!p)return null;
 const groupOf=(S,c)=>S.groups.findIndex(g=>g.m.includes(c));
 
 /* ---- state ---- */
-let S=null,sel=[],mode='daily';
+let S=null,sel=[],mode='daily',view='home';
 const dailySaved=()=>{const d=load('cx-daily',null);return d&&d.date===todayKey()?d.S:null};
 function save(){if(!S)return;
   if(S.mode==='daily'){store('cx-daily',{date:S.date,over:S.over,S});
     if(S.over){const h=load('cx-hist',{});if(!h[S.date]){h[S.date]={w:S.won?1:0,m:S.mistakes};store('cx-hist',h)}}}
   else store('cx-free',S)}
-function openDaily(){mode='daily';S=dailySaved()||newGame('daily',seedOf('connections-daily-'+todayKey()));sel=[];render()}
-function openFree(seed){mode='free';const f=load('cx-free',null);
+function openDaily(){view='game';mode='daily';S=dailySaved()||newGame('daily',seedOf('connections-daily-'+todayKey()));sel=[];render()}
+function openFree(seed){view='game';mode='free';const f=load('cx-free',null);
   S=seed==null&&f&&!f.over?f:newGame('free',seed==null?Math.floor(Math.random()*1e9):seed);sel=[];save();render()}
 
 /* ---- moves ---- */
@@ -119,11 +122,22 @@ const groupHTML=(g,miss)=>{const k=CATS[g.k];
     <span class="gm">${g.m.map(c=>`<span style="white-space:nowrap"><img class="mini" src="${FLAGS[c]}" alt="">${esc(byCode[c].n)}</span>`).join(' · ')}</span></div>`};
 function statsHTML(){const h=load('cx-hist',{}),days=Object.keys(h),won=days.filter(k=>h[k].w).length;
   return `<div class="stgrid"><div class="st"><b>${days.length}</b><span>played</span></div><div class="st"><b>${days.length?Math.round(won/days.length*100):0}%</b><span>solved</span></div><div class="st"><b>${streakOf(h)}</b><span>streak</span></div></div>`}
+const dateLabel=k=>new Date(k+'T12:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
+function homeHTML(){const key=todayKey(),num=dayNum(key,CX_FIRST),d=dailySaved(),h=load('cx-hist',{}),days=Object.keys(h);
+  const daily=d&&d.over
+    // played: one row per guess in the colours of its groups, like the shared result; tap to see the groups
+    ?`<button class="hcard" id="daily"><span class="hm">Today's puzzle #${num} · done</span><span class="dsum"><span class="dsq" style="grid-template-columns:repeat(4,1fr)" aria-hidden="true">${d.guesses.flat().map(c=>`<i class="g${d.groups[groupOf(d,c)].t}"></i>`).join('')}</span><span class="dtxt"><span class="ht">${d.won?'Solved':d.found.length+' of 4'}</span><span class="hs">${d.won?`${d.mistakes} mistake${d.mistakes===1?'':'s'}`:'groups found'}</span></span><span class="dstats"><span><b>${streakOf(h)}</b>streak</span><span><b>${days.length}</b>played</span><span><b>${days.length?Math.round(days.filter(k=>h[k].w).length/days.length*100):0}%</b>solved</span></span></span><span class="hs">Tap to see the groups and share your result.</span><span class="hm">Next puzzle in ${nextIn()}</span></button>`
+    :`<button class="hcard ac" id="daily"><span class="hm">#${num} · ${dateLabel(key)}</span><span class="ht">Today's puzzle</span><span class="hs">${d?'You started it: tap to continue.':'The same 16 countries for everyone, one try. Tap to start.'}</span></button>`;
+  return header('Connec<span>tions</span>','')+`<section class="home">${daily}
+    <div class="hrow one"><button class="hcard" data-go="free"><span class="ht">Solo</span><span class="hs">Practice on unlimited puzzles, at your pace.</span></button></div></section>
+    <section class="panel qrules"><span class="label">Quick rules</span><p class="hint">Find four groups of four countries that share something: a region, a flag, a language, a name… Pick four and tap <b>Submit</b>. Four mistakes and the game ends. Full rules in <b>How to play</b>.</p></section>`}
+function goHome(){view='home';toastMsg=null;drawToast();sel=[];render()}
 function render(keepShake){
+  if(view==='home'){app.innerHTML=homeHTML();bind();return}
   if(!S){app.innerHTML=header('Connections','')+`<section class="panel"><p class="hint">Could not build a puzzle. Try again later.</p></section>`;bind();return}
-  const coord=S.mode==='daily'?'Daily #'+S.num:'Practice';
+  const coord=S.mode==='daily'?'Daily #'+S.num:'Solo';
   let h=header('Connec<span>tions</span>',coord);
-  h+=`<div class="seg modes" role="group" aria-label="Mode"><button data-mode="daily" aria-pressed="${mode==='daily'}">Today's puzzle</button><button data-mode="free" aria-pressed="${mode==='free'}">Practice</button></div>`;
+  h+=`<div class="backline"><button class="linkbtn" id="home">← Back</button><span class="ht">${S.mode==='daily'?"Today's puzzle":'Solo'}</span></div>`;
   if(S.over)h+=resultHTML();
   h+=`<div class="cx-board">`;
   S.found.forEach(g=>h+=groupHTML(S.groups[g]));
@@ -156,10 +170,12 @@ function rulesHTML(){return `<h3>The idea</h3><ul>
   <li>Tap <span class="ib">i</span> on a group to read exactly what its category means. The categories and data are the same as in Borderline.</li></ul>
   <h3>Modes</h3><ul>
   <li><b>Today's puzzle</b>: the same for everyone, new every day at midnight CET. One try, saved on this device.</li>
-  <li><b>Practice</b>: unlimited puzzles. Share sends a link to the same puzzle.</li></ul>`}
+  <li><b>Solo</b>: unlimited practice puzzles. Share sends a link to the same puzzle.</li></ul>`}
 function bind(){
   app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>tap(b.dataset.c));
-  app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(b.dataset.mode===mode)return;b.dataset.mode==='daily'?openDaily():openFree()});
+  if($('daily'))$('daily').onclick=openDaily;
+  app.querySelectorAll('[data-go="free"]').forEach(b=>b.onclick=()=>openFree());
+  if($('home'))$('home').onclick=goHome;
   app.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{const k=CATS[+b.dataset.info];dialog(esc(k.label),`<p>${esc(k.desc)}</p>`)});
   if($('rules'))$('rules').onclick=()=>dialog('How to play',rulesHTML());
   if($('shuf'))$('shuf').onclick=()=>{S.left=shuffle(S.left,Math.random);save();render()};
@@ -172,9 +188,9 @@ function bind(){
 /* ---- start: ?p=123 opens that practice puzzle (from a shared link) ---- */
 (()=>{const p=TESTQ.get('p');
   if(p&&/^\d{1,10}$/.test(p)){openFree(+p);try{history.replaceState(null,'',location.pathname)}catch(e){}return}
-  openDaily()})();
+  render()})();
 // a new day while the page is open: show the new puzzle when you come back
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mode==='daily'&&S&&S.date!==todayKey())openDaily()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(view==='home')render();else if(mode==='daily'&&S&&S.date!==todayKey())openDaily()});
 </script>
 </body>
 </html>
