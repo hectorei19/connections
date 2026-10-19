@@ -17,8 +17,6 @@
   font-weight:700;font-size:.92rem;line-height:1.1;text-align:center;display:flex;align-items:center;justify-content:center;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
 .tile:hover{border-color:var(--sea)}
 .tile{transition:transform .12s,background-color .12s}
-/* a soft checkerboard by position only (it moves with Shuffle), so the colour is never a clue */
-.cx-grid .tile:nth-child(8n+1),.cx-grid .tile:nth-child(8n+3),.cx-grid .tile:nth-child(8n+6),.cx-grid .tile:nth-child(8n+8){background:color-mix(in srgb,var(--sea) 13%,var(--sheet))}
 .tile:active{transform:scale(.96)}
 .cx-grid .tile.on{background:var(--sea);color:var(--sheet);border-color:var(--sea);transform:translateY(-2px);box-shadow:0 4px 10px color-mix(in srgb,var(--sea) 35%,transparent)}
 /* a group found: its four tiles turn over and show their flags, then join the group's bar */
