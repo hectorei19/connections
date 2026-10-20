@@ -17,8 +17,6 @@
   font-weight:700;font-size:.92rem;line-height:1.1;text-align:center;display:flex;align-items:center;justify-content:center;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto}
 .tile:hover{border-color:var(--sea)}
 .tile{transition:transform .12s,background-color .12s}
-/* a soft checkerboard by position only (it moves with Shuffle), so the colour is never a clue */
-.cx-grid .tile:nth-child(8n+1),.cx-grid .tile:nth-child(8n+3),.cx-grid .tile:nth-child(8n+6),.cx-grid .tile:nth-child(8n+8){background:color-mix(in srgb,var(--sea) 13%,var(--sheet))}
 .tile:active{transform:scale(.96)}
 .cx-grid .tile.on{background:var(--sea);color:var(--sheet);border-color:var(--sea);transform:translateY(-2px);box-shadow:0 4px 10px color-mix(in srgb,var(--sea) 35%,transparent)}
 /* a group found: its four tiles turn over and show their flags, then join the group's bar */
@@ -46,6 +44,7 @@
 /* home screen, as in Borderline: today's puzzle open (tap a country to start), then Solo and With friends, then quick rules */
 .dsq i.g0,.dsq i.g1,.dsq i.g2,.dsq i.g3{background:var(--gc)}
 .hcard .cx-board{width:100%;margin-top:8px}
+.hcard.soon{opacity:.55;box-shadow:none}
 /* With friends: name, room lobby, live progress of every player, ranking */
 .nameinp{border:1px solid var(--rule);background:var(--paper);border-radius:4px;padding:10px;font-size:1rem;width:100%}
 .chip .pin{width:10px;height:10px}
@@ -289,7 +288,8 @@ function homeHTML(){const key=todayKey(),num=dayNum(key,CX_FIRST),d=dailySaved()
     :`<div class="hcard ac"><span class="hm">#${num} · ${dateLabel(key)}</span><span class="ht">Today's puzzle</span><span class="hs">${d?'You started it: tap a country to continue.':'The same 16 countries for everyone, one try. Tap a country to start.'}</span>${dailyBoard(d)}</div>`;
   return header('Connec<span>tions</span>','',true)+`<section class="home">${daily}
     <div class="hrow"><button class="hcard" data-go="free"><span class="ht">Solo</span><span class="hs">Practice on unlimited puzzles, at your pace.</span></button>
-    <button class="hcard" data-go="friends"><span class="ht">With friends</span><span class="hs">Play online, 2 to ${MAX_PLAYERS} players.</span></button></div></section>
+    <!-- With friends is switched off for now (the online rooms code stays for later; a shared ?room= link still opens a room) -->
+    <div class="hcard soon" aria-disabled="true"><span class="ht">With friends</span><span class="hs">Play online, 2 to ${MAX_PLAYERS} players.</span><span class="hm">(coming soon)</span></div></div></section>
     <section class="panel qrules"><span class="label">Quick rules</span><p class="hint">Find four groups of four countries that share something: a region, a flag, a language, a name… Pick four and tap <b>Submit</b>. Four mistakes and the game ends. Full rules in <b>How to play</b>.</p></section>`}
 // the logo goes home from anywhere; in a room that means leaving it (in the middle of a game, tap twice)
 function goHome(){if(roomRef){if(S&&S.mode==='online'&&!S.over&&!leaveArmed){leaveArmed=true;render();toast('Tap again to leave the room.');return}
