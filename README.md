@@ -4,7 +4,7 @@ Part of [Geomingo](https://hectorei19.github.io/geo-games/). Colours, fonts, Min
 
 Geography puzzle: 16 countries, four hidden groups of four. Pick four that share a category (a region, a flag, a language, a name...) and submit. Four mistakes and the game ends. Colours go from easiest to trickiest: yellow, green, blue, purple.
 
-Part of [Geomingo](https://hectorei19.github.io/geo-games/), daily geography games, each its own website: [Countries](https://hectorei19.github.io/country-grid/), [Connections](https://hectorei19.github.io/connections/) and [Top 10](https://hectorei19.github.io/top10/).
+Part of [Geomingo](https://hectorei19.github.io/geo-games/), daily geography games, each its own website: [Countries](https://hectorei19.github.io/country-grid/), [Cities](https://hectorei19.github.io/city-grid/), [Connections](https://hectorei19.github.io/connections/) and [Top 10](https://hectorei19.github.io/top10/).
 
 - The page opens on today's puzzle, as Countries (formerly Country Grid) opens on today's grid: tap a country to start.
 - Today's puzzle: the same for everyone, new at midnight CET (Spain), one try. Solo: unlimited practice puzzles; a shared practice link (`?p=123`) opens the same puzzle.
