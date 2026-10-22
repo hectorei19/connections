@@ -2,7 +2,7 @@
 
 Geography puzzle: 16 countries, four hidden groups of four. Pick four that share a category (a region, a flag, a language, a name...) and submit. Four mistakes and the game ends. Colours go from easiest to trickiest: yellow, green, blue, purple.
 
-Part of a family of three games, each its own website: [Borderline](https://hectorei19.github.io/borderline/), [Connections](https://hectorei19.github.io/connections/) and [Top 10](https://hectorei19.github.io/top10/).
+Part of a family of three games, each its own website: [Country Grid](https://hectorei19.github.io/country-grid/), [Connections](https://hectorei19.github.io/connections/) and [Top 10](https://hectorei19.github.io/top10/).
 
 - The page opens on today's puzzle, as Borderline opens on today's grid: tap a country to start.
 - Today's puzzle: the same for everyone, new at midnight CET (Spain), one try. Solo: unlimited practice puzzles; a shared practice link (`?p=123`) opens the same puzzle.
@@ -20,4 +20,4 @@ Files:
 
 Publishing a new version: change the `?v=` number after the files in `index.html`, so phones load the new files.
 
-Data sources and licences: see Credits in [Borderline](https://hectorei19.github.io/borderline/).
+Data sources and licences: see Credits in [Country Grid](https://hectorei19.github.io/country-grid/).
