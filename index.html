@@ -94,11 +94,11 @@ function buildPuzzleV1(seed){const r=rngFrom(seed);
       groups.push({k:ks[g].id,t:g,m:shuffle(big.length>=4?big:ex,r).slice(0,4).map(i=>C[i].c)})}
     if(groups.length===4)return {seed,groups,order:shuffle(groups.flatMap(g=>g.m),r)}}
   return null}
-// Since 2026-10-24: no other four of the 16 share a category, so the only set of four that works is a real group.
+// Since 2026-10-25: no other four of the 16 share a category, so the only set of four that works is a real group.
 // Every category of up to 40 countries is checked, plus three broad ones players reach for first (Africa, Europe, landlocked);
 // broader ones (flag has blue…) cannot all be avoided, so a guess that shares one is explained instead (see submit).
 // Groups come only from those checked categories. Daily puzzles before that day keep the old way, so they stay as they were.
-const STRICT_FROM='2026-10-24',CHECK_MAX=40,CHECK_ALSO=new Set(['Landlocked','In Africa','In Europe']);
+const STRICT_FROM='2026-10-25',CHECK_MAX=40,CHECK_ALSO=new Set(['Landlocked','In Africa','In Europe']);
 const sizeOf=k=>SOV.filter(i=>k.set[i]).length;
 const CHECKED=CATS.filter(k=>!SKIP.has(k.label)&&(sizeOf(k)<=CHECK_MAX||CHECK_ALSO.has(k.label)));
 const CHECKED_OF=new Map(SOV.map(i=>[i,CHECKED.filter(k=>k.set[i])]));
