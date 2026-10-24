@@ -6,7 +6,7 @@
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>Connections · Geomingo</title>
 <meta name="description" content="16 countries, 4 hidden groups of 4: a region, a flag, a language… Find them with 4 mistakes at most. A new puzzle every day. Daily geography games from Geomingo.">
-<meta name="theme-color" content="#FFF6EE">
+<meta name="theme-color" content="#F6F8F5">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Geomingo">
 <meta property="og:title" content="Connections · Geomingo">
@@ -16,14 +16,14 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="../geo-games/brand/icons/favicon.svg?v=202610230100" type="image/svg+xml">
-<link rel="icon" href="../geo-games/brand/icons/favicon-32.png?v=202610230100" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="../geo-games/brand/icons/apple-touch-icon.png?v=202610230100">
-<script src="../geo-games/brand/mingo.js?v=202610230100"></script>
+<link rel="icon" href="../geo-games/brand/icons/favicon.svg?v=202610240100" type="image/svg+xml">
+<link rel="icon" href="../geo-games/brand/icons/favicon-32.png?v=202610240100" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../geo-games/brand/icons/apple-touch-icon.png?v=202610240100">
+<script src="../geo-games/brand/mingo.js?v=202610240100"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=202610230200">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,600;62..125,800;62..125,900&family=Public+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css?v=202610240100">
 <style>
 /* Connections: 16 tiles in a 4 × 4 grid; found groups become coloured bars on top */
 .cx-board{display:flex;flex-direction:column;gap:8px}
@@ -77,7 +77,7 @@
 .lp.me{border-color:var(--sea)}
 .primary[disabled]{opacity:.5;cursor:default}
 </style>
-<link rel="stylesheet" href="../geo-games/brand/geomingo.css?v=202610230100">
+<link rel="stylesheet" href="../geo-games/brand/geomingo.css?v=202610240100">
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -85,8 +85,8 @@
 <div id="layer"></div>
 
 <script src="data.js?v=202610192300"></script>
-<script src="games.js?v=202610230200"></script>
-<script src="minigames.js?v=202610230200"></script>
+<script src="games.js?v=202610240100"></script>
+<script src="minigames.js?v=202610240100"></script>
 <!-- With friends: online rooms in Countries' Firebase Realtime Database -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -269,19 +269,20 @@ const cxKey=()=>S?S.mode+':'+(S.date||S.seed)+':'+(S.code||'')+':'+(S.round||'')
 const leftTxt=()=>{const l=MAX_MISTAKES-S.mistakes;return l+' mistake'+(l===1?'':'s')+' left.'};
 function submit(){if(!S||S.over||turning||sel.length!==4)return;
   const key=sel.slice().sort().join();
-  if(S.guesses.some(g=>g.slice().sort().join()===key)){say(cxKey(),'think','Good one, but you tried it!','You already tried these four. Swap one.');render();return}
+  if(S.guesses.some(g=>g.slice().sort().join()===key)){say(cxKey(),'think','Hold on.','You already tried these four. Swap one.');render();return}
   S.guesses.push(sel.slice());
   const gs=sel.map(c=>groupOf(S,c)),counts={};gs.forEach(g=>counts[g]=(counts[g]||0)+1);
   const best=Math.max(...Object.values(counts));
   if(best===4){const g=gs[0],picked=sel.slice();S.found.push(g);S.left=S.left.filter(c=>!picked.includes(c));sel=[];
     if(S.found.length===4){S.over=true;S.won=true}
     const left=4-S.found.length;
-    say(cxKey(),'happy',['Yes! ','Spot on! ','Great find! '][S.found.length%3]+CATS[S.groups[g].k].label+'.',left?left+' group'+(left===1?'':'s')+' to go.':'All four groups found!');
+    Geomingo.stamp('connections',CATS[S.groups[g].k].label);
+    say(cxKey(),'happy','Stamped: '+CATS[S.groups[g].k].label+'.',left?left+' group'+(left===1?'':'s')+' to go.':'All four groups found.');
     save();turnOver(picked,S.groups[g].t,()=>render());return}
   S.mistakes++;
   if(S.mistakes>=MAX_MISTAKES){S.over=true;S.won=false;sel=[];save();render();return}
-  if(best===3)say(cxKey(),'think','One away…','Three of these four belong together. '+leftTxt());
-  else say(cxKey(),'sad','Not quite.',"That's not a group. "+leftTxt());
+  if(best===3)say(cxKey(),'think','One away.','Three of these four belong together. '+leftTxt());
+  else say(cxKey(),'sad','Denied entry.',"That's not a group. "+leftTxt());
   save();render(true)}
 
 // the four tiles of a group just found turn over to show their flags in the group's colour, then the bar replaces them
@@ -318,9 +319,9 @@ function homeHTML(){const key=todayKey(),num=dayNum(key,CX_FIRST),d=dailySaved()
     ?`<button class="hcard" id="daily"><span class="hm">Today's puzzle #${num} · done</span><span class="dsum"><span class="dsq" style="grid-template-columns:repeat(4,1fr)" aria-hidden="true">${d.guesses.flat().map(c=>`<i class="g${d.groups[groupOf(d,c)].t}"></i>`).join('')}</span><span class="dtxt"><span class="ht">${d.won?'Solved':d.found.length+' of 4'}</span><span class="hs">${d.won?`${d.mistakes} mistake${d.mistakes===1?'':'s'}`:'groups found'}</span></span><span class="dstats"><span><b>${streakOf(h)}</b>streak</span><span><b>${days.length}</b>played</span><span><b>${days.length?Math.round(days.filter(k=>h[k].w).length/days.length*100):0}%</b>solved</span></span></span><span class="hs">Tap to see the groups and share your result.</span><span class="hm">Next puzzle in ${nextIn()}</span></button>`
     :`<div class="hcard ac"><span class="hm">#${num} · ${dateLabel(key)}</span><span class="ht">Today's puzzle</span><span class="hs">${d?'You started it: tap a country to continue.':'The same 16 countries for everyone, one try. Tap a country to start.'}</span>${dailyBoard(d)}</div>`;
   const st=Geomingo.streak();
-  const hi=d&&d.over?Geomingo.hello(d.won?'happy':'think',d.won?(st>1?'Nice one! '+st+' days in a row.':'Nice one!'):'Tough one today.',`Today's puzzle is done. Next one in ${nextIn()}.`)
+  const hi=d&&d.over?Geomingo.hello(d.won?'happy':'think',d.won?'Stamped for today.'+(st>1?' '+st+'-day streak.':''):'Rough crossing today.',`Today's puzzle is done. Next one in ${nextIn()}.`)
     :d?Geomingo.hello('think','Your puzzle is waiting.','Tap a country to carry on. One try.')
-    :Geomingo.hello('hello','Ready for today\'s puzzle?','Tap a country to start. One try, the same 16 for everyone.');
+    :Geomingo.hello('pass','GeoPass ready.','Tap a country to start. Every group you find is a stamp. One try, the same 16 for everyone.');
   return header('Connec<span>tions</span>','',true)+`<section class="home">${hi}${daily}
     <div class="hrow"><button class="hcard" data-go="free"><span class="ht">Solo</span><span class="hs">Practice on unlimited puzzles, at your pace.</span></button>
     <!-- With friends is switched off for now (the online rooms code stays for later; a shared ?room= link still opens a room) -->
@@ -343,7 +344,7 @@ function render(keepShake){
   if(on)h+=scoresHTML();
   watchResult(cxKey(),S.over,resultWindow);
   if(S.over)h+=on?roomResultHTML():resultHTML();
-  else h+=moodHTML(cxKey(),'hello','Find the four groups of four.','Pick four countries that share something, then Submit. '+leftTxt());
+  else h+=moodHTML(cxKey(),'pass','4 stamps to win.','Pick four countries that share something, then Submit. '+leftTxt());
   h+=`<div class="cx-board">`;
   S.found.forEach(g=>h+=groupHTML(S.groups[g]));
   if(S.over)S.groups.forEach((g,i)=>{if(!S.found.includes(i))h+=groupHTML(g,true)});
@@ -357,12 +358,12 @@ function render(keepShake){
 }
 // Mingo's verdict, for the result panel and the result window
 function verdict(){const n=S.mistakes;
-  return S.won?(n?{pose:'happy',t:'Solved! Nice one.',s:'All four groups, '+n+' mistake'+(n===1?'':'s')+'.'}:{pose:'happy',t:'Perfect! Not a single mistake.',s:'All four groups found.'})
-    :{pose:'sad',t:'So close! Better luck tomorrow.',s:'You found '+S.found.length+' of 4 groups.'}}
+  return S.won?(n?{pose:'happy',t:'Landed. All four groups.',s:'All four groups, '+n+' mistake'+(n===1?'':'s')+'.'}:{pose:'happy',t:'Full page. Not a single mistake.',s:'All four groups found.'})
+    :{pose:'sad',t:'Rough crossing. Better luck tomorrow.',s:'You found '+S.found.length+' of 4 groups.'}}
 function resultWindow(){const v=verdict(),daily=S.mode==='daily';
   if(S.mode==='online'){const list=ranked().filter(p=>p.cur),pos=list.findIndex(p=>p.pid===ME)+1;
-    return {pose:v.pose,title:v.t,num:pos?'#'+pos:null,unit:pos?'of '+list.length+' in room '+roomCode:'',share:()=>share(shareMessage()),close:'See the ranking'}}
-  return {pose:v.pose,title:v.t,num:S.found.length+'/4',unit:'groups · '+S.mistakes+' mistake'+(S.mistakes===1?'':'s'),
+    return {game:'connections',pose:v.pose,title:v.t,num:pos?'#'+pos:null,unit:pos?'of '+list.length+' in room '+roomCode:'',share:()=>share(shareMessage()),close:'See the ranking'}}
+  return {game:'connections',pose:v.pose,title:v.t,num:S.found.length+'/4',unit:'Groups · '+S.mistakes+' mistake'+(S.mistakes===1?'':'s'),
     mini:`<div class="gm-mini" style="grid-template-columns:repeat(4,20px)" aria-hidden="true">${S.guesses.flat().map(c=>`<i class="g${S.groups[groupOf(S,c)].t}" style="background:var(--gc)"></i>`).join('')}</div>`,
     sub:daily?`Next puzzle in ${nextIn()}.`:'',share:()=>share(shareMessage()),next:daily?Geomingo.nextGame('connections'):null,allDone:daily,close:'See the groups'}}
 function resultHTML(){const v=verdict();
@@ -377,7 +378,7 @@ function resultHTML(){const v=verdict();
 function roomResultHTML(){const list=ranked(),cur=list.filter(p=>p.cur),pos=cur.findIndex(p=>p.pid===ME)+1;
   const waiting=cur.some(p=>!p.done&&p.on!==false);
   const head=S.won?(pos===1&&!waiting?'You win!':`Solved in ${fmtTime(S.ms)}`):'Better luck next time';
-  return `<section class="panel">${Geomingo.hello(S.won?'happy':'sad',S.won?(pos===1&&!waiting?'You win! Mingo is impressed.':'Solved! Now wait for the others.'):'So close!',waiting?'Some players are still playing.':'Everyone has finished.',{key:'res'})}<span class="label">Room ${roomCode} · game ${S.round}</span><p class="big">${head}</p>
+  return `<section class="panel">${Geomingo.hello(S.won?'happy':'sad',S.won?(pos===1&&!waiting?'You win. First through the gate.':'Solved. Now wait for the others.'):'So close.',waiting?'Some players are still playing.':'Everyone has finished.',{key:'res'})}<span class="label">Room ${roomCode} · game ${S.round}</span><p class="big">${head}</p>
     <div class="players">${list.map((p,k)=>`<div class="lp${p.pid===ME?' me':''}${p.on===false?' off':''}"><span class="rk">${p.cur?k+1:''}</span><span class="pin" style="${pinStyle(p.i)}"></span>${esc(p.name)}<span class="tag">${!p.cur?'joining':p.done?(p.won?`solved · ${p.m||0} mistake${p.m===1?'':'s'} · ${fmtTime(p.ms)}`:`${p.f||0} of 4 groups`):p.on===false?'left':'playing…'}</span></div>`).join('')}</div>
     <pre class="sharebox" id="share">${esc(shareText())}</pre>
     <div class="row-btns"><button class="ghost" id="copy" style="flex:1">Share</button><button class="primary" id="rematch" style="flex:1" ${waiting?'disabled':''}>${waiting?'Waiting for the others…':'Play again'}</button></div>
